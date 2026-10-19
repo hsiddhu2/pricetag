@@ -31,7 +31,7 @@ test('trailer mode: final message gets the trailer, editor abort is safe, amend 
   assert.match(sb.git('log', '-1', '--format=%B'), /^first\n\nAgent-Usage: 2k tok \| 1m \| claude-code\/sonnet-4-5 \| ~\$0\.02 API-equiv\n*$/);
 
   // editor closed empty: commit aborted, HEAD unchanged
-  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 1000, id: 'b', req: 'b' }]);
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 100000, id: 'b', req: 'b' }]);
   const before = sb.git('rev-parse', 'HEAD');
   fs.writeFileSync(path.join(sb.repo, 'g'), '1'); sb.git('add', '.');
   assert.throws(() => sb.sh('git', ['commit', '-q'], { env: { ...sb.env, GIT_EDITOR: 'true' } }), /Aborting|empty/i);
@@ -42,7 +42,7 @@ test('trailer mode: final message gets the trailer, editor abort is safe, amend 
   assert.match(sb.git('log', '-1', '--format=%B'), /^typed subject\n\nAgent-Usage: 2k tok/);
 
   // amend with more work sums old + new, single trailer
-  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 1000, id: 'b', req: 'b' }, { ts: T0 + 2000, id: 'c', req: 'c' }]);
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 100000, id: 'b', req: 'b' }, { ts: T0 + 200000, id: 'c', req: 'c' }]);
   sb.sh('git', ['commit', '-q', '--amend'], { env: { ...sb.env, GIT_EDITOR: 'true' } });
   const body = sb.git('log', '-1', '--format=%B');
   assert.match(body, /Agent-Usage: 4k tok/);
@@ -51,12 +51,13 @@ test('trailer mode: final message gets the trailer, editor abort is safe, amend 
   // merge commit skipped
   sb.git('checkout', '-q', '-b', 'side'); commit(sb, 'side', 's');
   sb.git('checkout', '-q', 'main'); commit(sb, 'main2', 'm');
-  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 3000, id: 'd', req: 'd' }]);
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 300000, id: 'd', req: 'd' }]);
   sb.git('merge', '-q', '--no-ff', '-m', 'merge side', 'side');
   assert.doesNotMatch(sb.git('log', '-1', '--format=%B'), /Agent-Usage/);
 
-  // PRICETAG=0 skips and the work carries forward
-  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 3000, id: 'd', req: 'd' }, { ts: T0 + 4000, id: 'e', req: 'e' }]);
+  // PRICETAG=0 skips and the work carries forward. Timestamps well in the future so slow
+  // git (Windows) cannot commit after them.
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 300000, id: 'd', req: 'd' }, { ts: T0 + 301000, id: 'e', req: 'e' }]);
   fs.writeFileSync(path.join(sb.repo, 'h'), '1'); sb.git('add', '.');
   sb.sh('git', ['commit', '-q', '-m', 'manual'], { env: { ...sb.env, PRICETAG: '0' } });
   assert.doesNotMatch(sb.git('log', '-1', '--format=%B'), /Agent-Usage/);
@@ -110,7 +111,8 @@ test('config: keys, validation, env override, client registry', () => {
   assert.strictEqual(sb.sh('node', [BIN, 'config', 'mode'], { env: { ...sb.env, PRICETAG_MODE: 'off' } }).trim(), 'off');
   sb.pt('config', 'client', 'Acme Corp');
   const reg = JSON.parse(fs.readFileSync(path.join(sb.env.PRICETAG_HOME, 'clients.json'), 'utf8'));
-  assert.strictEqual(reg[sb.repo], 'Acme Corp');
+  const { canon } = require('../lib/attribute');
+  assert.strictEqual(reg[canon(sb.repo)], 'Acme Corp');
   sb.pt('config', 'client', '--unset');
   assert.deepStrictEqual(JSON.parse(fs.readFileSync(path.join(sb.env.PRICETAG_HOME, 'clients.json'), 'utf8')), {});
 });
