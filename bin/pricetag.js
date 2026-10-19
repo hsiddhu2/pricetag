@@ -31,6 +31,8 @@ for (let i = 0; i < argv.length; i++) {
   else flags._.push(a);
 }
 
+class UsageError extends Error {}
+const usage = m => { throw new UsageError(m); };
 const out = (s = '') => process.stdout.write(s + '\n');
 const err = (s) => process.stderr.write(s + '\n');
 const json = (o) => out(JSON.stringify(o, null, 2));
@@ -58,7 +60,8 @@ const commands = {
     const plan = config.get('plan');
     const p = pt.pending(process.cwd(), { branch: flags.branch || null });
     const s = p.summary;
-    if (flags.json) return json({ pending: plain(s), mode: config.get('mode'), plan, hookInstalled: hook.installed() });
+    for (const e of pt.loadErrors) err(`pricetag: ${e.adapter}: ${e.error} (skipped)`);
+    if (flags.json) return json({ pending: plain(s), mode: config.get('mode'), plan, hookInstalled: hook.installed(), errors: pt.loadErrors });
     out();
     if (s.tokens) {
       out(`  Uncommitted agent work   ${fmt.tokens(s.tokens)} tokens  (${fmt.tokens(s.cacheRead + s.cacheWrite)} cached)`);
@@ -117,16 +120,20 @@ const commands = {
 
   // Usage across repos, grouped. The agency and team view.
   report() {
-    const since = report.parseSince(flags.since);
-    const until = flags.until ? report.parseSince(flags.until) : Infinity;
+    let since, until;
+    try { since = report.parseSince(flags.since); until = flags.until ? report.parseSince(flags.until) : Infinity; } catch (e) { usage(e.message); }
     const by = String(flags.by || 'repo');
+    if (flags.by === true || !report.GROUPS.includes(by)) usage(`--by must be one of: ${report.GROUPS.join(', ')}`);
     const plan = flags.plan ? String(flags.plan) : (git.repoRoot() ? config.get('plan') : 'auto');
     let events = pt.loadEvents({ since }).filter(e => e.ts >= since && e.ts <= until);
     if (flags.repo) {
-      const root = flags.repo === true ? requireRepo() : fs.realpathSync(String(flags.repo));
+      let root;
+      if (flags.repo === true) root = requireRepo();
+      else { try { root = fs.realpathSync(String(flags.repo)); } catch { usage(`--repo: no such directory "${flags.repo}"`); } }
       events = pt.attribute.select(events, { repoRoot: root, since, until });
     }
     if (flags.agent) events = events.filter(e => e.agent === flags.agent);
+    for (const e of pt.loadErrors) err(`pricetag: ${e.adapter}: ${e.error} (skipped)`);
     const rows = report.group(events, by);
     const total = pt.attribute.summarize(events);
     const view = rows.map(r => ({
@@ -175,7 +182,7 @@ const commands = {
     const base = flags.base || git.defaultBranch(process.cwd()) || 'main';
     let range = `${base}..HEAD`;
     try { git.git(['rev-parse', '--verify', base]); } catch { try { git.git(['rev-parse', '--verify', `origin/${base}`]); range = `origin/${base}..HEAD`; } catch { /* keep */ } }
-    const list = git.commits(range, process.cwd());
+    const list = git.commits([range, '--no-merges'], process.cwd());
     const total = pt.sumTrailers(list);
     const costWord = plan === 'api' ? 'est. cost' : 'API-equivalent';
     const lines = ['### Agent usage'];
@@ -229,10 +236,11 @@ const commands = {
       for (const [k, v] of Object.entries(all)) out(`  ${k.padEnd(8)} ${v || '(unset)'}`);
       return;
     }
+    if (!config.KEYS.includes(key)) usage(`unknown setting "${key}" (known: ${config.KEYS.join(', ')})`);
     if (flags.unset) { config.unset(key); return out(`pricetag: ${key} unset`); }
     if (value === undefined) return out(config.get(key));
-    requireRepo();
-    config.set(key, value, process.cwd(), { global: !!flags.global });
+    if (!flags.global) requireRepo();
+    try { config.set(key, value, process.cwd(), { global: !!flags.global }); } catch (e) { usage(e.message); }
     out(`pricetag: ${key} = ${value}`);
   },
 
@@ -242,6 +250,7 @@ const commands = {
     const root = git.repoRoot();
     d.repo = root ? { root, hooksInstalled: hook.installed(), settings: config.all() } : null;
     d.pricesAsOf = pricing.asOf();
+    d.sqliteReader = require('../lib/adapters/opencode').readerAvailable();
     if (flags.json) return json(d);
     out();
     out(`  node ${d.node} · ${d.git || 'git not found'} · ${d.platform}`);
@@ -251,6 +260,7 @@ const commands = {
       out(`  ${a.name.padEnd(12)} ${a.status}${a.err ? ' (' + a.err + ')' : ''}`);
       for (const r of a.roots) out(`               ${r}`);
       if (a.roots.length) out(`               ${a.files} files · ${a.events} events in the last ${flags.since || '7d'}`);
+      if (a.name === 'opencode' && a.roots.length && !d.sqliteReader) out('               needs Node 22.5+ or the sqlite3 CLI to read opencode.db');
     }
     out();
     if (d.repo) {
@@ -304,7 +314,7 @@ const commands = {
   pricetag badge [--write]     README badge
   pricetag uninstall
 
-  Skip one commit:  PRICETAG=0 git commit ...
+  Skip one commit:  PRICETAG=0 git commit ...   (PowerShell: $env:PRICETAG=0)
   ${REPO_URL}`);
   },
 };
@@ -341,4 +351,4 @@ jobs:
   const fn = commands[cmd];
   if (!fn) { err(`pricetag: unknown command "${cmd}"`); commands.help(); process.exit(2); }
   await fn();
-})().catch(e => { err('pricetag: ' + (e && e.message || e)); process.exit(1); });
+})().catch(e => { err('pricetag: ' + (e && e.message || e)); process.exit(e instanceof UsageError ? 2 : 1); });

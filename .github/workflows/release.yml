@@ -15,6 +15,7 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
       - run: git config --global user.email ci@example.com && git config --global user.name ci
+      - run: npm install -g npm@latest   # trusted publishing needs npm 11.5.1+
       - run: npm test
       - name: Check tag matches package version
         run: |

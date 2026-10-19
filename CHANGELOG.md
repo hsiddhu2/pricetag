@@ -6,9 +6,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [0.3.0] - 2026-10-19
 
-First release.
+First public release. Earlier numbers were internal iterations.
 
-- Records agent usage per commit from local transcripts. Claude Code adapter.
+- Reads usage from Claude Code, Codex CLI, Copilot CLI, OpenCode and Cline, Roo Code, Kilo Code and the Cline CLI. Each adapter records the cache accounting rule it was verified against.
+- Records agent usage per commit from local transcripts.
 - Default recording to local git notes. Opt-in commit trailers with `pricetag config mode trailer`.
 - `pricetag report` groups usage by repo, client, branch, agent, model or day, with CSV and JSON output.
 - `pricetag pr` prints a Markdown summary for the current branch. GitHub Action posts it as a PR comment.

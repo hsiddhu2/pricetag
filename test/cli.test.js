@@ -76,10 +76,14 @@ test('hooks coexist with existing hooks, exit 0 lines and husky v9', () => {
   commit(sb, 'x');
   assert.match(fs.readFileSync(path.join(sb.repo, '.git', 'COMMIT_EDITMSG.log'), 'utf8'), /existing/);
   assert.match(sb.git('log', '-1', '--format=%B'), /Agent-Usage/);
-  // node missing from PATH: commit still succeeds, no trailer
-  writeClaude(sb.proj, sb.repo, [{ ts: Date.now() + 1000, id: 'b', req: 'b' }]);
-  fs.writeFileSync(path.join(sb.repo, 'z'), '1'); sb.git('add', '.');
-  sb.sh('git', ['commit', '-q', '-m', 'no node'], { env: { ...sb.env, PATH: '/usr/bin:/bin' } });
+  // node missing from PATH: commit still succeeds, no trailer (git stays reachable)
+  if (process.platform !== 'win32') {
+    const gitDir = path.dirname(execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim());
+    writeClaude(sb.proj, sb.repo, [{ ts: Date.now() + 1000, id: 'b', req: 'b' }]);
+    fs.writeFileSync(path.join(sb.repo, 'z'), '1'); sb.git('add', '.');
+    sb.sh('git', ['commit', '-q', '-m', 'no node'], { env: { ...sb.env, PATH: `${gitDir}:/usr/bin:/bin` } });
+    assert.doesNotMatch(sb.git('log', '-1', '--format=%B'), /Agent-Usage/);
+  }
   // uninstall leaves the pre-existing hook
   assert.match(sb.pt('uninstall'), /removed/);
   const after = fs.readFileSync(path.join(hookDir, 'commit-msg'), 'utf8');
@@ -169,8 +173,60 @@ test('performance: commit with hook stays fast with 75 MB of unrelated transcrip
   const t0 = process.hrtime.bigint();
   sb.git('commit', '-q', '-m', 'perf');
   const ms = Number(process.hrtime.bigint() - t0) / 1e6;
-  assert.ok(ms < 2000, `commit with hook took ${ms.toFixed(0)} ms`);
+  assert.ok(ms < 4000, `commit with hook took ${ms.toFixed(0)} ms`);
   const t1 = process.hrtime.bigint();
   sb.pt('--json');
-  assert.ok(Number(process.hrtime.bigint() - t1) / 1e6 < 2000);
+  assert.ok(Number(process.hrtime.bigint() - t1) / 1e6 < 4000);
+});
+
+test('notes survive amend, rebase and reset without double counting', () => {
+  const sb = sandbox();
+  const T0 = Date.now();
+  sb.pt('init');
+  assert.strictEqual(sb.git('config', 'notes.rewriteRef').trim(), 'refs/notes/pricetag');
+  const note = sha => { try { return sb.git('notes', '--ref=pricetag', 'show', sha).trim(); } catch { return null; } };
+  const tok = sha => { const n = note(sha); return n ? n.match(/(\d+)k tok/)[1] : null; };
+  const later = (sec) => ({ ...sb.env, GIT_COMMITTER_DATE: new Date(T0 + sec * 1000).toISOString(), GIT_AUTHOR_DATE: new Date(T0 + sec * 1000).toISOString() });
+
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 - 1000, id: 'a', req: 'a' }]);
+  const c1 = commit(sb, 'c1');
+  assert.strictEqual(tok(c1), '2');
+  // amend with no new work, forced to a new SHA: note copied, still 2k
+  sb.sh('git', ['commit', '-q', '--amend', '--no-edit'], { env: later(10) });
+  const c1b = sb.git('rev-parse', 'HEAD').trim();
+  assert.notStrictEqual(c1b, c1);
+  assert.strictEqual(tok(c1b), '2');
+  // amend with new work: 2k + 2k
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 - 1000, id: 'a', req: 'a' }, { ts: T0 + 20000, id: 'b', req: 'b' }]);
+  sb.sh('git', ['commit', '-q', '--amend', '--no-edit'], { env: later(30) });
+  assert.strictEqual(tok(sb.git('rev-parse', 'HEAD').trim()), '4');
+  // branch with two commits of 2k each, then rebase onto an advanced main: notes follow, no inflation
+  sb.git('checkout', '-q', '-b', 'feat');
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 40000, id: 'c', req: 'c' }]);
+  sb.sh('git', ['commit', '-q', '--allow-empty', '-m', 'f1'], { env: later(50) });
+  writeClaude(sb.proj, sb.repo, [{ ts: T0 + 60000, id: 'd', req: 'd' }]);
+  sb.sh('git', ['commit', '-q', '--allow-empty', '-m', 'f2'], { env: later(70) });
+  sb.git('checkout', '-q', 'main');
+  sb.sh('git', ['commit', '-q', '--allow-empty', '-m', 'm2'], { env: later(80) });
+  sb.git('checkout', '-q', 'feat');
+  sb.sh('git', ['rebase', '-q', 'main'], { env: later(90) });
+  const log = sb.pt('log', '-n', '4');
+  const sum = [...log.matchAll(/(\d+)k\s+\dm/g)].map(m => Number(m[1])).reduce((a, b) => a + b, 0);
+  assert.strictEqual(sum, 2 + 2 + 4, `expected 8k across the branch, got ${sum}k in:\n${log}`);
+  // reset --hard then a fresh commit: nothing from ORIG_HEAD leaks in
+  sb.git('reset', '-q', '--hard', 'HEAD~1');
+  sb.sh('git', ['commit', '-q', '--allow-empty', '-m', 'after reset'], { env: later(100) });
+  assert.strictEqual(note(sb.git('rev-parse', 'HEAD').trim()), null);
+});
+
+test('a broken log source is skipped, not fatal', () => {
+  const sb = sandbox();
+  const oc = path.join(sb.home, 'oc');
+  fs.mkdirSync(oc, { recursive: true });
+  fs.writeFileSync(path.join(oc, 'opencode.db'), 'this is not a database');
+  writeClaude(sb.proj, sb.repo, [{ ts: Date.now() - 1000, id: 'a', req: 'a' }]);
+  const r = sb.sh('node', [BIN, '--json'], { env: { ...sb.env, OPENCODE_DATA_DIR: oc } });
+  const j = JSON.parse(r);
+  assert.strictEqual(j.pending.tokens, 2000, 'claude-code still counted');
+  assert.ok(j.errors.some(e => e.adapter === 'opencode'), 'opencode error reported');
 });

@@ -117,3 +117,15 @@ test('all adapters: since filter and zero-token rows', () => {
   assert.strictEqual(codex.load({ dirs: [path.join(FX, 'codex')], since: far }).length, 0);
   assert.strictEqual(copilot.load({ dirs: [path.join(FX, 'copilot', 'session-state')], since: far }).length, 0);
 });
+
+test('roo: model comes from the environment details tag', () => {
+  const src = { dir: path.join(FX, 'roo', 'tasks'), agent: 'roo', gross: (ts, t) => ts >= Date.parse('2025-11-02') || t.apiProtocol === 'openai', kind: 'tasks' };
+  const evs = cline.load({ dirs: [src] });
+  assert.notStrictEqual(evs[0].model, 'unknown');
+});
+
+test('copilot dotted model ids are priced', () => {
+  const pricing = require('../lib/pricing');
+  const evs = copilot.load({ dirs: [path.join(FX, 'copilot', 'session-state')] });
+  assert.ok(pricing.price(evs[0].model, evs[0].usage) > 0);
+});

@@ -1,7 +1,7 @@
 {
   "name": "pricetag",
   "version": "0.3.0",
-  "description": "See what your AI coding agents cost, per repo, per branch, per client. Reads the logs Claude Code, Codex, Copilot CLI and OpenCode already write. Local, no account, one command.",
+  "description": "See what your AI coding agents cost, per repo, per branch, per client. Reads the logs Claude Code, Codex, Copilot CLI, OpenCode and Cline already write. Local, no account, one command.",
   "bin": {
     "pricetag": "bin/pricetag.js"
   },
@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "node test/run.js",
     "check": "node --check bin/pricetag.js"
   },
   "engines": {

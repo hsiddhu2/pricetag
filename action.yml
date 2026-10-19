@@ -31,8 +31,9 @@ runs:
         git fetch --no-tags origin "$BASE" 2>/dev/null || true
         git fetch origin 'refs/notes/pricetag:refs/notes/pricetag' 2>/dev/null || true
         node "${{ github.action_path }}/bin/pricetag.js" pr --base "$BASE" > /tmp/pricetag-comment.md
-        printf '\n<!-- pricetag-usage -->\n' >> /tmp/pricetag-comment.md
         cat /tmp/pricetag-comment.md
+        if ! grep -q 'commits recorded' /tmp/pricetag-comment.md; then echo "pricetag: nothing recorded on this branch, no comment posted"; exit 0; fi
+        printf '\n<!-- pricetag-usage -->\n' >> /tmp/pricetag-comment.md
         ID=$(gh api "repos/$REPO/issues/$PR/comments" --paginate -q '[.[] | select(.body | contains("<!-- pricetag-usage -->"))] | first | .id // empty')
         if [ -n "$ID" ]; then
           gh api -X PATCH "repos/$REPO/issues/comments/$ID" -F body=@/tmp/pricetag-comment.md > /dev/null || echo "pricetag: could not update the comment (fork PR or read-only token)"

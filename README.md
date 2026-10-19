@@ -54,7 +54,7 @@ Not supported, on purpose: **Cursor**, **Windsurf** and **Kiro** keep billable u
 pricetag                     agent work not yet committed, and recent commits
 pricetag report              usage across all repos
                                --by repo | client | branch | agent | model | day | session
-                               --since 30d | 2w | 12h | 2026-10-01    --repo    --agent codex
+                               --since 30d | 2w | 3m | 1y | 2026-10-01   --until   --repo   --agent codex
                                --csv    --json
 pricetag init                install hooks so each commit records its usage (local git notes)
 pricetag log                 commits with their recorded usage
@@ -62,6 +62,7 @@ pricetag pr                  Markdown summary for the current branch
 pricetag config              mode · plan · client · scope
 pricetag doctor              detected agents, log paths, event counts
 pricetag prices              price table, and --update to refresh it
+pricetag badge [--write]     README badge with the repo's recorded token total
 pricetag uninstall
 ```
 
@@ -81,7 +82,7 @@ By default that line goes to **git notes** (`refs/notes/pricetag`), which stay o
 pricetag config mode trailer
 ```
 
-`pricetag log` and `pricetag pr` read both. The hooks cannot fail a commit: if Node is missing or anything goes wrong, the commit goes through and nothing is recorded. `PRICETAG=0 git commit` skips one commit.
+`pricetag log` and `pricetag pr` read both. The hooks cannot fail a commit: if Node is missing or anything goes wrong, the commit goes through and nothing is recorded. `PRICETAG=0 git commit` skips one commit (PowerShell: `$env:PRICETAG=0`).
 
 A pull request summary is one command away, and the [GitHub Action](#github-action) can post it on every PR:
 
@@ -119,9 +120,9 @@ Each usage record carries a timestamp and the working directory the agent ran in
 Known limits:
 
 - A rebase or cherry-pick resets commit times, so uncommitted agent work from before it is not attributed.
-- `git commit --amend -m "new text"` replaces the message and with it a trailer. Plain `--amend` keeps it. Notes mode is not affected.
+- In trailer mode, `git commit --amend -m "new text"` replaces the message and with it the trailer. Plain `--amend` keeps it. In notes mode the note follows the amended commit, and a rebase carries notes along.
 - GitHub's "Squash and merge" drops trailers from the squashed commit. The PR comment is the record in that case.
-- Copilot CLI writes usage at session end, so a session that spans a commit is attributed to the next one.
+- Copilot CLI writes usage at session end, so a session that spans a commit is attributed to the next one. Sessions that crash before writing it are not counted.
 - If you launch the agent from a parent folder, set `pricetag config scope /that/folder`.
 
 ## GitHub Action
@@ -146,7 +147,7 @@ The Action reads the usage recorded in the commits. It never sees your transcrip
 
 ## Privacy
 
-pricetag reads token counts, model names, timestamps, session ids and directory paths from your agents' logs. It does not read prompt text or code, and it sends nothing anywhere. The one network call is `pricetag prices --update`, which you run yourself. Details in [SECURITY.md](SECURITY.md).
+pricetag uses token counts, model names, timestamps, session ids and directory paths from your agents' logs. It parses the log files to get those and discards everything else: no prompt text or code is stored, written anywhere, or sent anywhere. The one network call is `pricetag prices --update`, which you run yourself. The README badge is an image URL served by shields.io, so a viewer's browser fetches it. Details in [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
