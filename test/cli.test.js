@@ -76,12 +76,15 @@ test('hooks coexist with existing hooks, exit 0 lines and husky v9', () => {
   commit(sb, 'x');
   assert.match(fs.readFileSync(path.join(sb.repo, '.git', 'COMMIT_EDITMSG.log'), 'utf8'), /existing/);
   assert.match(sb.git('log', '-1', '--format=%B'), /Agent-Usage/);
-  // node missing from PATH: commit still succeeds, no trailer (git stays reachable)
+  // node missing from PATH: commit still succeeds, no trailer. A PATH with only git in it,
+  // because CI runners keep a system node in /usr/bin.
   if (process.platform !== 'win32') {
-    const gitDir = path.dirname(execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim());
+    const gitBin = execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim();
+    const onlyGit = fs.mkdtempSync(path.join(os.tmpdir(), 'pt-onlygit-'));
+    fs.symlinkSync(gitBin, path.join(onlyGit, 'git'));
     writeClaude(sb.proj, sb.repo, [{ ts: Date.now() + 1000, id: 'b', req: 'b' }]);
     fs.writeFileSync(path.join(sb.repo, 'z'), '1'); sb.git('add', '.');
-    sb.sh('git', ['commit', '-q', '-m', 'no node'], { env: { ...sb.env, PATH: `${gitDir}:/usr/bin:/bin` } });
+    sb.sh('git', ['commit', '-q', '-m', 'no node'], { env: { ...sb.env, PATH: onlyGit } });
     assert.doesNotMatch(sb.git('log', '-1', '--format=%B'), /Agent-Usage/);
   }
   // uninstall leaves the pre-existing hook
