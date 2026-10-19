@@ -1,0 +1,15 @@
+{
+  "id": "msg_01HX0FILEASSISTANT00000001",
+  "sessionID": "ses_01HZ3K9T2Q8W7R6E5Y4U3I2O1P",
+  "role": "assistant",
+  "parentID": "msg_01HX0FILEUSER000000000001",
+  "modelID": "claude-sonnet-4-20250514",
+  "providerID": "anthropic",
+  "mode": "build",
+  "agent": "build",
+  "path": { "cwd": "/home/dev/projects/pricetag", "root": "/home/dev/projects/pricetag" },
+  "cost": 0.0087,
+  "tokens": { "total": 9100, "input": 1500, "output": 600, "reasoning": 0, "cache": { "read": 7000, "write": 0 } },
+  "time": { "created": 1769000003000, "completed": 1769000005200 },
+  "finish": "stop"
+}

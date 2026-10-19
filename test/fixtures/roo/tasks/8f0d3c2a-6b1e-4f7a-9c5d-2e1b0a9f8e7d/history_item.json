@@ -1,0 +1,15 @@
+{
+  "id": "8f0d3c2a-6b1e-4f7a-9c5d-2e1b0a9f8e7d",
+  "number": 42,
+  "ts": 1792336130000,
+  "task": "Add a --json flag to the report command",
+  "tokensIn": 42560,
+  "tokensOut": 2117,
+  "cacheWrites": 1200,
+  "cacheReads": 36606,
+  "totalCost": 0.0432,
+  "size": 51200,
+  "workspace": "/home/dev/projects/pricetag",
+  "mode": "code",
+  "status": "completed"
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1760800000000",
+    "ulid": "01K7V0ZB8Q3M4N5P6R7S8T9U0V",
+    "ts": 1760800030000,
+    "task": "Add a --json flag to the report command",
+    "tokensIn": 4754,
+    "tokensOut": 2117,
+    "cacheWrites": 1200,
+    "cacheReads": 36606,
+    "totalCost": 0.0432,
+    "size": 48213,
+    "cwdOnTaskInitialization": "/home/dev/projects/pricetag",
+    "modelId": "claude-sonnet-4-5",
+    "apiProvider": "anthropic"
+  }
+]

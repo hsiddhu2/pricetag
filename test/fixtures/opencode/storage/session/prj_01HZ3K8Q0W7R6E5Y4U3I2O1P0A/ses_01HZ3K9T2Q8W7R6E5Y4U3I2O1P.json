@@ -1,0 +1,8 @@
+{
+  "id": "ses_01HZ3K9T2Q8W7R6E5Y4U3I2O1P",
+  "projectID": "prj_01HZ3K8Q0W7R6E5Y4U3I2O1P0A",
+  "directory": "/home/dev/projects/pricetag",
+  "title": "Add --json flag to report",
+  "version": "1.1.24",
+  "time": { "created": 1769000000000, "updated": 1769000005200 }
+}

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "session_id": "1784094124598_rruoq",
+  "source": "cli",
+  "pid": 85916,
+  "started_at": "2026-10-18T14:00:00.609Z",
+  "ended_at": "2026-10-18T14:00:41.865Z",
+  "exit_code": 0,
+  "status": "completed",
+  "interactive": true,
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-5",
+  "cwd": "/home/dev/projects/pricetag",
+  "workspace_root": "/home/dev/projects/pricetag",
+  "enable_tools": true,
+  "enable_spawn": false,
+  "enable_teams": false,
+  "metadata": {
+    "usage": { "inputTokens": 26430, "outputTokens": 1816, "cacheReadTokens": 22656, "cacheWriteTokens": 1200, "totalCost": 0.0334 }
+  },
+  "messages_path": "/home/dev/.cline/data/sessions/1784094124598_rruoq/1784094124598_rruoq.messages.json"
+}
