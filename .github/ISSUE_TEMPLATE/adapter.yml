@@ -1,0 +1,21 @@
+name: Adapter request
+description: Ask for support for another coding agent
+labels: [adapter]
+body:
+  - type: input
+    attributes:
+      label: Agent name and version
+    validations: { required: true }
+  - type: textarea
+    attributes:
+      label: Where it logs usage
+      description: Path on disk and file format, if you know. One redacted sample record helps most.
+      render: text
+  - type: checkboxes
+    attributes:
+      label: Does the log contain
+      options:
+        - label: per-message token counts
+        - label: model name
+        - label: timestamp
+        - label: working directory or project path

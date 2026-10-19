@@ -1,0 +1,30 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+  id-token: write   # npm trusted publishing (OIDC), no token stored anywhere
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: git config --global user.email ci@example.com && git config --global user.name ci
+      - run: npm test
+      - name: Check tag matches package version
+        run: |
+          V=$(node -p "require('./package.json').version")
+          [ "refs/tags/v$V" = "$GITHUB_REF" ] || { echo "tag $GITHUB_REF does not match package.json version $V"; exit 1; }
+      - run: npm publish --provenance --access public
+      - name: Move the v0 major tag
+        run: |
+          MAJOR=v$(node -p "require('./package.json').version.split('.')[0]")
+          git tag -f "$MAJOR" && git push -f origin "$MAJOR"
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

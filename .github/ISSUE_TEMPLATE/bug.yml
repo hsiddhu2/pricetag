@@ -1,0 +1,30 @@
+name: Bug report
+description: Something gave a wrong number, failed, or broke a commit
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got.
+    validations: { required: true }
+  - type: textarea
+    attributes:
+      label: Output of `pricetag doctor`
+      description: Paste it as is. It contains no prompt text, only paths and counts.
+      render: text
+    validations: { required: true }
+  - type: input
+    attributes:
+      label: pricetag version
+      description: Output of `pricetag --version`
+    validations: { required: true }
+  - type: dropdown
+    attributes:
+      label: Agent
+      options: [Claude Code, Codex CLI, Copilot CLI, OpenCode, Cline / Roo Code, Other]
+    validations: { required: true }
+  - type: dropdown
+    attributes:
+      label: OS
+      options: [macOS, Linux, Windows, WSL]
+    validations: { required: true }
