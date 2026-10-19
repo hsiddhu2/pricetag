@@ -69,7 +69,8 @@ test('hooks coexist with existing hooks, exit 0 lines and husky v9', () => {
   const sb = sandbox();
   const hookDir = path.join(sb.repo, '.git', 'hooks');
   fs.mkdirSync(hookDir, { recursive: true });
-  fs.writeFileSync(path.join(hookDir, 'commit-msg'), '#!/bin/sh\necho existing >> "$1.log"\nexit 0\n', { mode: 0o755 });
+  // a strict existing hook: set -eu aborts on any unset variable or failing command
+  fs.writeFileSync(path.join(hookDir, 'commit-msg'), '#!/bin/sh\nset -eu\necho existing >> "$1.log"\nexit 0\n', { mode: 0o755 });
   assert.match(sb.pt('init', '--trailer'), /added to existing commit-msg/);
   const text = fs.readFileSync(path.join(hookDir, 'commit-msg'), 'utf8');
   assert.ok(text.indexOf('# pricetag-hook') < text.lastIndexOf('exit 0'), 'inserted before exit');
