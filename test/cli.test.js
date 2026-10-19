@@ -228,5 +228,6 @@ test('a broken log source is skipped, not fatal', () => {
   const r = sb.sh('node', [BIN, '--json'], { env: { ...sb.env, OPENCODE_DATA_DIR: oc } });
   const j = JSON.parse(r);
   assert.strictEqual(j.pending.tokens, 2000, 'claude-code still counted');
-  assert.ok(j.errors.some(e => e.adapter === 'opencode'), 'opencode error reported');
+  // Only where a SQLite reader exists can the corrupt file be noticed at all.
+  if (require('../lib/adapters/opencode').readerAvailable()) assert.ok(j.errors.some(e => e.adapter === 'opencode'), 'opencode error reported');
 });
