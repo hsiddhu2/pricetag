@@ -18,6 +18,7 @@ function sandbox({ repoName = 'pt-repo-' } = {}) {
     PRICETAG_HOME: path.join(home, '.config', 'pricetag'),
     GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t',
     GIT_CONFIG_GLOBAL: path.join(home, '.gitconfig'), PRICETAG_QUIET: '1',
+    GIT_EDITOR: 'true', GIT_TERMINAL_PROMPT: '0',   // never open a real editor on CI
   };
   delete env.PRICETAG_MODE; delete env.PRICETAG_PLAN; delete env.PRICETAG_SCOPE; delete env.PRICETAG_CLIENT;
   const sh = (c, a, opts = {}) => execFileSync(c, a, { cwd: repo, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts });
@@ -26,7 +27,11 @@ function sandbox({ repoName = 'pt-repo-' } = {}) {
   git('init', '-q', '-b', 'main');
   const proj = path.join(claudeDir, 'projects', 'x');
   fs.mkdirSync(proj, { recursive: true });
-  return { home, repo, env, sh, pt, git, proj, claudeDir };
+  // A fake editor that types a subject line, usable on every OS.
+  const editor = path.join(home, 'editor.js');
+  fs.writeFileSync(editor, "const fs=require('fs');const f=process.argv[2];fs.writeFileSync(f,'typed subject\\n'+fs.readFileSync(f,'utf8'));");
+  const typeSubject = `node ${editor.replace(/\\/g, '/')}`;
+  return { home, repo, env, sh, pt, git, proj, claudeDir, typeSubject };
 }
 
 function line(obj) { return JSON.stringify(obj) + '\n'; }

@@ -34,11 +34,11 @@ test('trailer mode: final message gets the trailer, editor abort is safe, amend 
   writeClaude(sb.proj, sb.repo, [{ ts: T0 + 1000, id: 'b', req: 'b' }]);
   const before = sb.git('rev-parse', 'HEAD');
   fs.writeFileSync(path.join(sb.repo, 'g'), '1'); sb.git('add', '.');
-  assert.throws(() => sb.git('commit', '-q'), /Aborting|empty/i);
+  assert.throws(() => sb.sh('git', ['commit', '-q'], { env: { ...sb.env, GIT_EDITOR: 'true' } }), /Aborting|empty/i);
   assert.strictEqual(sb.git('rev-parse', 'HEAD'), before);
 
   // typed subject stays clean
-  sb.sh('git', ['commit', '-q'], { env: { ...sb.env, GIT_EDITOR: 'sed -i 1s/^/typed\\ subject/' } });
+  sb.sh('git', ['commit', '-q'], { env: { ...sb.env, GIT_EDITOR: sb.typeSubject } });
   assert.match(sb.git('log', '-1', '--format=%B'), /^typed subject\n\nAgent-Usage: 2k tok/);
 
   // amend with more work sums old + new, single trailer
