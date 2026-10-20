@@ -17,7 +17,7 @@ $ pricetag report --by client --since 30d
 ```
 
 [![CI](https://github.com/hsiddhu2/pricetag/actions/workflows/ci.yml/badge.svg)](https://github.com/hsiddhu2/pricetag/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/pricetag)](https://www.npmjs.com/package/pricetag)
+[![npm](https://img.shields.io/npm/v/pricetag-cli)](https://www.npmjs.com/package/pricetag-cli)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ## Why
@@ -29,12 +29,12 @@ pricetag reads those local records, joins them to your git repos by working dire
 ## Install
 
 ```bash
-npm install -g pricetag
+npm install -g pricetag-cli
 pricetag doctor        # shows which agents it found on this machine
 pricetag report        # usage by repo, last 30 days
 ```
 
-Node 18 or newer. No dependencies. `npx pricetag doctor` works too if you want to look before installing.
+Node 18 or newer. No dependencies. `npx pricetag-cli doctor` works too if you want to look before installing.
 
 ## Supported agents
 

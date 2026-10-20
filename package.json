@@ -1,5 +1,5 @@
 {
-  "name": "pricetag",
+  "name": "pricetag-cli",
   "version": "0.3.0",
   "description": "See what your AI coding agents cost, per repo, per branch, per client. Reads the logs Claude Code, Codex, Copilot CLI, OpenCode and Cline already write. Local, no account, one command.",
   "bin": {
@@ -31,7 +31,12 @@
     "cost",
     "finops",
     "git-hooks",
-    "git-notes"
+    "git-notes",
+    "ai-agents",
+    "llm",
+    "tokens",
+    "usage",
+    "cli"
   ],
   "license": "MIT",
   "repository": {

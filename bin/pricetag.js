@@ -92,7 +92,7 @@ const commands = {
     requireRepo();
     const self = fs.realpathSync(__filename);
     for (const r of hook.install(self)) out(`pricetag: ${r.msg}`);
-    if (self.includes(`${path.sep}_npx${path.sep}`)) out('pricetag: running from the npx cache. For hooks that survive `npm cache clean`, run: npm i -g pricetag');
+    if (self.includes(`${path.sep}_npx${path.sep}`)) out('pricetag: running from the npx cache. For hooks that survive `npm cache clean`, run: npm i -g pricetag-cli');
     if (flags.trailer) config.set('mode', 'trailer');
     if (flags.plan) config.set('plan', String(flags.plan));
     if (flags.client) config.set('client', String(flags.client));
