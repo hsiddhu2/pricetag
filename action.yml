@@ -1,5 +1,5 @@
 name: pricetag agent usage
-description: Post a short agent-usage summary on each pull request, built from the usage recorded in the repo's commits.
+description: Post a short agent-usage summary on each pull request, built from the usage recorded in its commits.
 branding:
   icon: tag
   color: orange
