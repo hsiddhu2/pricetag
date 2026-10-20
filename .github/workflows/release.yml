@@ -30,6 +30,12 @@ jobs:
         run: |
           MAJOR=v$(node -p "require('./package.json').version.split('.')[0]")
           git tag -f "$MAJOR" && git push -f origin "$MAJOR"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          V=$(node -p "require('./package.json').version")
+          awk -v v="$V" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > notes.md
+          printf '\n```bash\nnpm install -g pricetag-cli\n```\n' >> notes.md
+          cat notes.md
       - uses: softprops/action-gh-release@v3
         with:
-          generate_release_notes: true
+          body_path: notes.md

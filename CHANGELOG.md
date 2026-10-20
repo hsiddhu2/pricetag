@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-20
+
+- GitHub Action listed on the Marketplace as "pricetag agent usage". Usage is unchanged: `uses: hsiddhu2/pricetag@v0`.
+- The Action runs on Node 24 LTS. Node 20 reached end of life in April 2026.
+- CI also tests Node 24.
+- Release notes on GitHub now come from this changelog.
+
 ## [0.3.1] - 2026-10-20
 
 - Published to npm as `pricetag-cli`. The command is still `pricetag`.
