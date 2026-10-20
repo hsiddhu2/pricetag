@@ -1,6 +1,6 @@
 {
   "name": "pricetag-cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "See what your AI coding agents cost, per repo, per branch, per client. Reads the logs Claude Code, Codex, Copilot CLI, OpenCode and Cline already write. Local, no account, one command.",
   "bin": {
     "pricetag": "bin/pricetag.js"

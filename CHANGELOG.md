@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-20
+
+- Published to npm as `pricetag-cli`. The command is still `pricetag`.
+- README notes that commit-message linters see the trailer in trailer mode.
+- Package metadata fixes.
+
 ## [0.3.0] - 2026-10-19
 
 First public release. Earlier numbers were internal iterations.
