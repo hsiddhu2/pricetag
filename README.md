@@ -122,6 +122,7 @@ Known limits:
 - A rebase or cherry-pick resets commit times, so uncommitted agent work from before it is not attributed.
 - In trailer mode, `git commit --amend -m "new text"` replaces the message and with it the trailer. Plain `--amend` keeps it. In notes mode the note follows the amended commit, and a rebase carries notes along.
 - GitHub's "Squash and merge" drops trailers from the squashed commit. The PR comment is the record in that case.
+- In trailer mode the agent name becomes part of the commit message, so a commit-message linter that rejects certain words will see it, including on a later `--amend` or reword. Notes mode keeps the message untouched.
 - Copilot CLI writes usage at session end, so a session that spans a commit is attributed to the next one. Sessions that crash before writing it are not counted.
 - If you launch the agent from a parent folder, set `pricetag config scope /that/folder`.
 
