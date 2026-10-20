@@ -141,8 +141,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      - uses: hsiddhu2/pricetag@v0
+      - uses: hsiddhu2/pricetag@v0   # latest 0.x release. Pin an exact one with @v0.3.2
 ```
+
+`hsiddhu2/pricetag` is this repository, which is how GitHub names every Action. `@v0` follows the newest 0.x release, the same way `actions/checkout@v7` follows 7.x.
 
 The Action reads the usage recorded in the commits. It never sees your transcripts. In notes mode, push the notes so the Action can read them: `git push origin refs/notes/pricetag`. In trailer mode nothing extra is needed. `pricetag init --action` writes this file for you.
 

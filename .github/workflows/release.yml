@@ -24,7 +24,7 @@ jobs:
       - name: Publish to npm (skipped if this version is already there)
         run: |
           N=$(node -p "require('./package.json').name"); V=$(node -p "require('./package.json').version")
-          if npm view "$N@$V" version >/dev/null 2>&1; then echo "$N@$V already on npm, skipping publish"
+          if [ "$(npm view "$N@$V" version 2>/dev/null)" = "$V" ]; then echo "$N@$V already on npm, skipping publish"
           else npm publish --provenance --access public; fi
       - name: Move the v0 major tag
         run: |

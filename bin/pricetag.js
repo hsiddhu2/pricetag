@@ -344,7 +344,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
-      - uses: hsiddhu2/pricetag@v0
+      - uses: hsiddhu2/pricetag@v0   # latest 0.x release. Pin an exact one with @v0.3.2
 `;
 
 (async () => {
