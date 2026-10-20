@@ -54,7 +54,7 @@ Add a fixture under `test/fixtures/<tool>/` copied from a real log with any prom
 
 - One change per PR.
 - Describe what and why. The template asks for both.
-- CI runs on Linux, macOS and Windows with Node 18, 20 and 22. All of them have to pass.
+- CI runs on Linux, macOS and Windows with Node 18, 20, 22 and 24. All of them have to pass.
 
 ## Releases
 
